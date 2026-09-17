@@ -53,17 +53,33 @@
     <body>
     @php
         $authUser = auth()->user();
-        $initials = collect(explode(' ', trim($authUser->name ?? '')))->filter()->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->take(2)->implode('');
+        $canManage = $authUser ? $authUser->canManageRecords() : false;
+        $initials = $authUser ? collect(explode(' ', trim($authUser->name ?? '')))->filter()->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->take(2)->implode('') : '';
     @endphp
     @php
-        $navItems = [
-            ['path' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
-            ['path' => '/mypets', 'label' => 'My Pets', 'icon' => 'bi-heart'],
-            ['path' => '/register-pet', 'label' => 'Register Pet', 'icon' => 'bi-plus-circle'],
-            ['path' => '/vaccinations', 'label' => 'Vaccinations', 'icon' => 'bi-shield-check'],
-            ['path' => '/deworming', 'label' => 'Deworming', 'icon' => 'bi-capsule'],
-            ['path' => '/qrcodes', 'label' => 'QR Codes', 'icon' => 'bi-qr-code'],
-        ];
+        $navItems = $authUser?->isAdmin() ? [
+            ['path' => 'admin/dashboard', 'route' => 'admin.dashboard', 'active' => ['admin.dashboard'], 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
+            ['path' => 'admin/users', 'route' => 'admin.users', 'active' => ['admin.users', 'admin.users.create', 'admin.users.edit'], 'label' => 'User Management', 'icon' => 'bi-people'],
+            ['path' => 'staff/pets', 'route' => 'staff.pets', 'active' => ['staff.pets', 'pets.show'], 'label' => 'All Pets', 'icon' => 'bi-collection'],
+            ['path' => 'staff/pets/create', 'route' => 'staff.pets.create', 'active' => ['staff.pets.create'], 'label' => 'Register Pet', 'icon' => 'bi-plus-circle'],
+            ['path' => 'vaccinations', 'route' => 'vaccinations.index', 'active' => ['vaccinations.*'], 'label' => 'Vaccinations', 'icon' => 'bi-shield-check'],
+            ['path' => 'deworming', 'route' => 'deworming.index', 'active' => ['deworming.*'], 'label' => 'Deworming', 'icon' => 'bi-capsule'],
+            ['path' => 'qrcodes', 'route' => 'qrcodes.index', 'active' => ['qrcodes.*'], 'label' => 'QR Codes', 'icon' => 'bi-qr-code'],
+        ] : ($authUser?->isStaff() ? [
+            ['path' => 'staff/dashboard', 'route' => 'staff.dashboard', 'active' => ['staff.dashboard'], 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
+            ['path' => 'staff/users', 'route' => 'staff.users', 'active' => ['staff.users', 'staff.users.show'], 'label' => 'User Management', 'icon' => 'bi-people'],
+            ['path' => 'staff/pets', 'route' => 'staff.pets', 'active' => ['staff.pets', 'pets.show'], 'label' => 'All Pets', 'icon' => 'bi-collection'],
+            ['path' => 'staff/pets/create', 'route' => 'staff.pets.create', 'active' => ['staff.pets.create'], 'label' => 'Register Pet', 'icon' => 'bi-plus-circle'],
+            ['path' => 'vaccinations', 'route' => 'vaccinations.index', 'active' => ['vaccinations.*'], 'label' => 'Vaccinations', 'icon' => 'bi-shield-check'],
+            ['path' => 'deworming', 'route' => 'deworming.index', 'active' => ['deworming.*'], 'label' => 'Deworming', 'icon' => 'bi-capsule'],
+            ['path' => 'qrcodes', 'route' => 'qrcodes.index', 'active' => ['qrcodes.*'], 'label' => 'QR Codes', 'icon' => 'bi-qr-code'],
+        ] : [
+            ['path' => 'dashboard', 'route' => 'dashboard', 'active' => ['dashboard'], 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
+            ['path' => 'mypets', 'route' => 'pets.index', 'active' => ['pets.index', 'pets.show'], 'label' => 'My Pets', 'icon' => 'bi-heart'],
+            ['path' => 'vaccinations', 'route' => 'vaccinations.index', 'active' => ['vaccinations.*'], 'label' => 'Vaccinations', 'icon' => 'bi-shield-check'],
+            ['path' => 'deworming', 'route' => 'deworming.index', 'active' => ['deworming.*'], 'label' => 'Deworming', 'icon' => 'bi-capsule'],
+            ['path' => 'qrcodes', 'route' => 'qrcodes.index', 'active' => ['qrcodes.*'], 'label' => 'QR Codes', 'icon' => 'bi-qr-code'],
+        ]);
     @endphp
     <div class="d-flex">
         <aside class="app-sidebar d-none d-lg-flex flex-column justify-content-between p-3">
@@ -72,25 +88,24 @@
                 <div class="sidebar-label px-2 mb-2">Workspace</div>
                 <nav class="app-nav nav flex-column gap-1">
                     @foreach ($navItems as $item)
-                        <a class="nav-link {{ request()->is(ltrim($item['path'], '/')) ? 'active' : '' }}" href="{{ $item['path'] }}"><i class="bi {{ $item['icon'] }}"></i>{{ $item['label'] }}</a>
+                        <a class="nav-link {{ request()->routeIs(...$item['active']) ? 'active' : '' }}" href="{{ route($item['route']) }}"><i class="bi {{ $item['icon'] }}"></i>{{ $item['label'] }}</a>
                     @endforeach
                 </nav>
             </div>
-            <div class="d-flex align-items-center gap-2 pt-3 border-top"><span class="user-chip">{{ $initials }}</span><div class="text-truncate" style="min-width:0"><div class="small fw-semibold text-truncate">{{ $authUser->name }}</div><div class="record-meta text-truncate">{{ $authUser->email }}</div></div></div>
+            <div class="d-flex align-items-center gap-2 pt-3 border-top"><span class="user-chip">{{ $initials }}</span><div class="text-truncate" style="min-width:0"><div class="small fw-semibold text-truncate">{{ $authUser?->name }}</div><div class="record-meta text-truncate">{{ $authUser?->email }}</div></div></div>
         </aside>
         <main class="flex-grow-1 min-vh-100">
             <header class="app-header px-3 px-md-4 d-flex align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-2 flex-grow-1"><button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNavigation" aria-label="Open navigation"><i class="bi bi-list"></i></button><div class="search-wrap w-100 d-none d-sm-block"><div class="input-group input-group-sm"><span class="input-group-text"><i class="bi bi-search"></i></span><input class="form-control" aria-label="Search pets and records" placeholder="Search pets, records..."></div></div></div>
-                <a class="btn btn-brand btn-sm px-3" href="/register-pet"><i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">Register Pet</span><span class="d-sm-none">Add</span></a>
                 <div class="dropdown">
                     <button class="btn btn-light btn-sm border d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="user-chip">{{ $initials }}</span><span class="d-none d-md-inline fw-semibold text-truncate" style="max-width:160px">{{ $authUser->name }}</span><i class="bi bi-chevron-down small"></i>
+                        <span class="user-chip">{{ $initials }}</span><span class="d-none d-md-inline fw-semibold text-truncate" style="max-width:160px">{{ $authUser?->name }}</span><i class="bi bi-chevron-down small"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                         <li class="px-3 py-2 border-bottom">
-                            <div class="fw-semibold text-truncate">{{ $authUser->name }}</div>
-                            <div class="record-meta text-truncate">{{ $authUser->email }}</div>
-                            @if ($authUser->contact_number)<div class="record-meta">{{ $authUser->contact_number }}</div>@endif
+                            <div class="fw-semibold text-truncate">{{ $authUser?->name }}</div>
+                            <div class="record-meta text-truncate">{{ $authUser?->email }}</div>
+                            @if ($authUser?->contact_number)<div class="record-meta">{{ $authUser->contact_number }}</div>@endif
                         </li>
                         <li><form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</button></form></li>
                     </ul>
@@ -104,8 +119,9 @@
             </div>
         </main>
     </div>
-    <div class="offcanvas offcanvas-start mobile-menu" tabindex="-1" id="mobileNavigation"><div class="offcanvas-header border-bottom"><div class="d-flex align-items-center gap-2"><span class="brand-mark">P</span><span class="brand-title">PawID</span></div><button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button></div><div class="offcanvas-body"><div class="d-flex align-items-center gap-2 mb-4 p-3 rounded" style="background:var(--brand-soft)"><span class="user-chip">{{ $initials }}</span><div class="text-truncate" style="min-width:0"><div class="small fw-semibold text-truncate">{{ $authUser->name }}</div><div class="record-meta text-truncate">{{ $authUser->email }}</div></div></div><nav class="app-nav nav flex-column gap-1">@foreach ($navItems as $item)<a class="nav-link {{ request()->is(ltrim($item['path'], '/')) ? 'active' : '' }}" href="{{ $item['path'] }}"><i class="bi {{ $item['icon'] }}"></i>{{ $item['label'] }}</a>@endforeach</nav><form method="POST" action="{{ route('logout') }}" class="mt-3">@csrf<button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-box-arrow-right me-1"></i>Sign Out</button></form></div></div>
+    <div class="offcanvas offcanvas-start mobile-menu" tabindex="-1" id="mobileNavigation"><div class="offcanvas-header border-bottom"><div class="d-flex align-items-center gap-2"><span class="brand-mark">P</span><span class="brand-title">PawID</span></div><button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button></div><div class="offcanvas-body"><div class="d-flex align-items-center gap-2 mb-4 p-3 rounded" style="background:var(--brand-soft)"><span class="user-chip">{{ $initials }}</span><div class="text-truncate" style="min-width:0"><div class="small fw-semibold text-truncate">{{ $authUser?->name }}</div><div class="record-meta text-truncate">{{ $authUser?->email }}</div></div></div><nav class="app-nav nav flex-column gap-1">@foreach ($navItems as $item)<a class="nav-link {{ request()->routeIs(...$item['active']) ? 'active' : '' }}" href="{{ route($item['route']) }}"><i class="bi {{ $item['icon'] }}"></i>{{ $item['label'] }}</a>@endforeach</nav><form method="POST" action="{{ route('logout') }}" class="mt-3">@csrf<button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-box-arrow-right me-1"></i>Sign Out</button></form></div></div>
     @stack('scripts')
+    @vite(['resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

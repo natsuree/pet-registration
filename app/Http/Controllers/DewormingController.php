@@ -13,10 +13,20 @@ class DewormingController extends Controller
 {
     public function index(): View
     {
-        $records = DewormingRecord::query()->with('pet')->latest('administered_at')->get();
+        $user = auth()->user();
+        $pets = Pet::query()
+            ->when(! $user->canManageRecords(), fn ($q) => $q->where('owner_email', $user->email))
+            ->orderBy('name')
+            ->get();
+
+        $records = DewormingRecord::query()
+            ->with('pet')
+            ->whereIn('pet_id', $pets->pluck('id'))
+            ->latest('administered_at')
+            ->get();
 
         return view('deworming', [
-            'pets' => Pet::query()->orderBy('name')->get(),
+            'pets' => $pets,
             'records' => $records,
             'stats' => $this->stats($records),
         ]);
@@ -24,16 +34,19 @@ class DewormingController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        DewormingRecord::create($request->validate([
+        abort_unless(auth()->user()->canManageRecords(), 403, 'Only OCV staff can add deworming records.');
+
+        $validated = $request->validate([
             'pet_id' => ['required', 'exists:pets,id'],
             'product' => ['required', 'string', 'max:120'],
-            'administered_at' => ['required', 'date'],
+            'administered_at' => ['required', 'date', 'before_or_equal:today'],
             'next_due_at' => ['nullable', 'date', 'after_or_equal:administered_at'],
             'weight_kg' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
-        ]));
+        ]);
 
-        return redirect('/deworming')->with('success', 'Deworming record saved.');
+        DewormingRecord::create($validated);
+        return redirect()->back()->with('success', 'Deworming record saved.');
     }
 
     private function stats(Collection $records): array

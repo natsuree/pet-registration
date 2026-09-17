@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -22,13 +21,14 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'contact_number' => ['required', 'string', 'max:40'],
+            'date_of_birth' => ['required', 'date', 'before_or_equal:today'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $user = User::create($validated);
 
-        Auth::login($user);
-
-        return redirect()->route('dashboard');
+        return redirect()
+            ->route('login')
+            ->with('status', 'Account created successfully. Please log in.');
     }
 }

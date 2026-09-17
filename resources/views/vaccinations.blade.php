@@ -1,9 +1,13 @@
 @extends('layouts.app')
-
+@php $canManage = auth()->user()?->canManageRecords() ?? false; @endphp
 @section('content')
     <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-end gap-3 mb-4">
         <div><div class="page-kicker">Health records</div><h1 class="page-title mb-1">Vaccinations</h1><p class="text-muted mb-0">Keep vaccinations current and see which pets need a follow-up.</p></div>
-        @if ($pets->isNotEmpty())<button class="btn btn-brand btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#addVaccination"><i class="bi bi-plus-lg me-1"></i>Add record</button>@else<a href="/register-pet" class="btn btn-brand btn-sm"><i class="bi bi-plus-lg me-1"></i>Register a pet</a>@endif
+        @if ($canManage)
+            <button class="btn btn-brand btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#addVaccination"><i class="bi bi-plus-lg me-1"></i>Add record</button>
+        @elseif ($pets->isEmpty())
+            <span class="record-meta">No pets registered yet.</span>
+        @endif
     </div>
     @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if ($errors->any())<div class="alert alert-danger mb-4">Please review the record details and try again.</div>@endif
@@ -29,7 +33,5 @@
         </div>
     </section>
 
-    @if ($pets->isNotEmpty())
-        <div class="modal fade" id="addVaccination" tabindex="-1" aria-labelledby="addVaccinationTitle" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><form method="POST" action="/vaccinations">@csrf<div class="modal-header"><h2 class="modal-title fs-5" id="addVaccinationTitle">Add vaccination record</h2><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row g-3"><div class="col-md-6"><label class="form-label">Pet</label><select name="pet_id" class="form-select" required><option value="">Select pet</option>@foreach ($pets as $pet)<option value="{{ $pet->id }}">{{ $pet->name }} ({{ $pet->code }})</option>@endforeach</select></div><div class="col-md-6"><label class="form-label">Vaccine</label><input name="vaccine" class="form-control" required></div><div class="col-md-6"><label class="form-label">Date given</label><input name="administered_at" type="date" class="form-control" required></div><div class="col-md-6"><label class="form-label">Next due</label><input name="next_due_at" type="date" class="form-control"></div><div class="col-12"><label class="form-label">Veterinarian</label><input name="veterinarian" class="form-control"></div><div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="3"></textarea></div></div></div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-brand" type="submit">Save record</button></div></form></div></div></div>
-    @endif
+    <div class="modal fade" id="addVaccination" tabindex="-1" aria-labelledby="addVaccinationTitle" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><form method="POST" action="{{ route('vaccinations.store') }}">@csrf<div class="modal-header"><h2 class="modal-title fs-5" id="addVaccinationTitle">Add vaccination record</h2><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row g-3"><div class="col-md-6"><label class="form-label">Pet</label><select name="pet_id" class="form-select" required><option value="">Select pet</option>@foreach ($pets as $pet)<option value="{{ $pet->id }}">{{ $pet->name }} ({{ $pet->code }})</option>@endforeach</select></div><div class="col-md-6"><label class="form-label">Vaccine</label><input name="vaccine" class="form-control" required></div><div class="col-md-6"><label class="form-label">Date given</label><input name="administered_at" type="date" max="{{ now()->toDateString() }}" class="form-control" required></div><div class="col-md-6"><label class="form-label">Next due</label><input name="next_due_at" type="date" class="form-control"></div><div class="col-12"><label class="form-label">Veterinarian</label><input name="veterinarian" class="form-control"></div><div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="3"></textarea></div></div></div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-brand" type="submit">Save record</button></div></form></div></div></div>
 @endsection

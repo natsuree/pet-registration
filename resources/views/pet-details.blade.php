@@ -3,8 +3,10 @@
 @section('content')
   <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center">
-      <a href="/mypets" class="small text-decoration-none">&larr; Back to My Pets</a>
-      <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="bi bi-trash me-1"></i>Delete pet</button>
+      <a href="{{ auth()->user()->canManageRecords() ? url('staff/pets') : url('mypets') }}" class="small text-decoration-none">&larr; Back</a>
+      @if (auth()->user()->canManageRecords())
+        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="bi bi-trash me-1"></i>Delete pet</button>
+      @endif
     </div>
 
     <div class="card card-light p-4 mt-3">
@@ -73,7 +75,7 @@
   </div>
 @endsection
 
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">

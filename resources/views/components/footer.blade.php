@@ -14,11 +14,9 @@
 
         <div class="footer-links">
             <a href="/">Home</a>
-            <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#about">About</a>
-            <a href="/">Privacy</a>
-            <a href="/">Terms</a>
+            <a href="{{ route('features') }}">Features</a>
+            <a href="{{ route('how-it-works') }}">How It Works</a>
+            <a href="{{ route('login') }}">Log In</a>
         </div>
     </div>
     <div class="container footer-meta">

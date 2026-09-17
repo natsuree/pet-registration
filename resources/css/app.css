@@ -243,6 +243,27 @@ main {
     margin-top: 28px;
 }
 
+.hero-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 26px;
+    list-style: none;
+    padding: 0;
+    margin: 30px 0 0;
+}
+
+.hero-links a {
+    display: inline-flex;
+    align-items: center;
+    color: var(--paw-gray-700);
+    font-weight: 600;
+    font-size: 0.96rem;
+}
+
+.hero-links a:hover {
+    color: var(--paw-navy-strong);
+}
+
 .btn {
     min-height: 50px;
     padding: 0 22px;
@@ -763,6 +784,30 @@ main {
     padding: 48px 0 80px;
 }
 
+.auth-card {
+    width: min(560px, calc(100% - 32px));
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(18, 44, 79, 0.08);
+    border-radius: 28px;
+    box-shadow: var(--paw-shadow);
+}
+
+.auth-card .auth-form-shell {
+    padding: 48px 42px;
+}
+
+.page-section {
+    padding: 72px 0 60px;
+}
+
+.page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 40px;
+}
+
 .auth-grid {
     display: grid;
     grid-template-columns: 1fr 1.05fr;
@@ -909,6 +954,11 @@ main {
     box-shadow: 0 0 0 4px rgba(17, 112, 255, 0.1);
 }
 
+.field-hint {
+    font-size: 0.82rem;
+    color: var(--paw-gray-500);
+}
+
 .form-row {
     display: flex;
     align-items: center;
@@ -982,22 +1032,31 @@ main {
     position: relative;
 }
 
+.password-wrap input {
+    padding-right: 48px;
+}
+
 .password-toggle {
     position: absolute;
-    right: 12px;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
     border: 0;
     background: transparent;
     color: var(--paw-gray-500);
-    font-weight: 700;
+    font-size: 1.05rem;
     cursor: pointer;
+    z-index: 1;
 }
 
 @media (max-width: 980px) {
     .hero-grid,
-    .qr-grid,
-    .auth-grid {
+    .qr-grid {
         grid-template-columns: 1fr;
     }
 
@@ -1077,7 +1136,7 @@ main {
         width: 100%;
     }
 
-    .auth-panel {
+    .auth-card .auth-form-shell {
         padding: 32px 22px;
     }
 }

@@ -2,10 +2,10 @@
 
 @section('content')
   <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h4 mb-1">My Pets</h1><div class="small text-muted">{{ $pets->count() }} {{ Str::plural('pet', $pets->count()) }} registered</div></div><a href="/register-pet" class="btn btn-brand btn-sm">Register Pet</a></div>
+    <div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h4 mb-1">My Pets</h1><div class="small text-muted">{{ $pets->count() }} {{ Str::plural('pet', $pets->count()) }} registered</div></div></div>
     @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if ($pets->isEmpty())
-      <div class="text-center p-5 card card-light"><p class="mb-3">You have no pets yet.</p><a href="/register-pet" class="btn btn-brand">Register your first pet</a></div>
+      <div class="text-center p-5 card card-light"><p class="mb-0 text-muted">No pets registered yet.</p></div>
     @else
       <div class="row g-3">
         @foreach ($pets as $pet)

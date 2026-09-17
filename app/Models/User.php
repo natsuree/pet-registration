@@ -21,8 +21,35 @@ class User extends Authenticatable
         'name',
         'email',
         'contact_number',
+        'date_of_birth',
         'password',
+        'role',
     ];
+
+    public const ROLE_USER = 'user';
+    public const ROLE_STAFF = 'staff';
+    public const ROLE_ADMIN = 'admin';
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === self::ROLE_STAFF;
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === self::ROLE_USER;
+    }
+
+    /** Staff and admins can manage all pets and medical records. */
+    public function canManageRecords(): bool
+    {
+        return in_array($this->role, [self::ROLE_STAFF, self::ROLE_ADMIN], true);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -43,6 +70,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'date_of_birth' => 'date',
             'password' => 'hashed',
         ];
     }

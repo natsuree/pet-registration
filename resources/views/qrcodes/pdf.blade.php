@@ -7,7 +7,7 @@
             'Species' => $pet->species,
             'Breed' => $pet->breed,
             'Sex' => $pet->sex,
-            'Date of Birth' => $pet->date_of_birth?->format('M d, Y'),
+            'Date of Birth' => $pet->date_of_birth?->date::format('M d, Y'),
             'Color' => $pet->color,
             'Microchip No.' => $pet->microchip,
             'Owner' => $pet->owner_name,

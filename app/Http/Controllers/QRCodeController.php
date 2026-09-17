@@ -11,11 +11,17 @@ class QRCodeController extends Controller
 {
     public function index(): View
     {
-        return view('qrcodes', ['pets' => Pet::query()->orderBy('name')->get()]);
+        $user = auth()->user();
+        $pets = Pet::query()
+            ->when(! $user->canManageRecords(), fn ($q) => $q->where('owner_email', $user->email))
+            ->orderBy('name')
+            ->get();
+        return view('qrcodes', ['pets' => $pets]);
     }
 
     public function show(Pet $pet): \Symfony\Component\HttpFoundation\Response
     {
+        $this->authorizeOwner($pet);
         $qrSvg = QrCode::format('svg')
             ->size(180)
             ->margin(1)
@@ -29,7 +35,15 @@ class QRCodeController extends Controller
 
     public function preview(Pet $pet): \Symfony\Component\HttpFoundation\Response
     {
+        $this->authorizeOwner($pet);
+
         return $this->qrResponse($pet, inline: true);
+    }
+
+    private function authorizeOwner(Pet $pet): void
+    {
+        $user = auth()->user();
+        abort_unless($user->canManageRecords() || $pet->owner_email === $user->email, 403, 'You do not have access to this pet record.');
     }
 
     private function qrResponse(Pet $pet, bool $inline): \Symfony\Component\HttpFoundation\Response

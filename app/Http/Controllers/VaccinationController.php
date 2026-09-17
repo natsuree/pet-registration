@@ -13,10 +13,20 @@ class VaccinationController extends Controller
 {
     public function index(): View
     {
-        $records = Vaccination::query()->with('pet')->latest('administered_at')->get();
+        $user = auth()->user();
+        $pets = Pet::query()
+            ->when(! $user->canManageRecords(), fn ($q) => $q->where('owner_email', $user->email))
+            ->orderBy('name')
+            ->get();
+
+        $records = Vaccination::query()
+            ->with('pet')
+            ->whereIn('pet_id', $pets->pluck('id'))
+            ->latest('administered_at')
+            ->get();
 
         return view('vaccinations', [
-            'pets' => Pet::query()->orderBy('name')->get(),
+            'pets' => $pets,
             'records' => $records,
             'stats' => $this->stats($records),
         ]);
@@ -24,16 +34,19 @@ class VaccinationController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Vaccination::create($request->validate([
+        abort_unless(auth()->user()->canManageRecords(), 403, 'Only OCV staff can add vaccination records.');
+
+        $validated = $request->validate([
             'pet_id' => ['required', 'exists:pets,id'],
             'vaccine' => ['required', 'string', 'max:120'],
-            'administered_at' => ['required', 'date'],
+            'administered_at' => ['required', 'date', 'before_or_equal:today'],
             'next_due_at' => ['nullable', 'date', 'after_or_equal:administered_at'],
             'veterinarian' => ['nullable', 'string', 'max:120'],
             'notes' => ['nullable', 'string', 'max:1000'],
-        ]));
+        ]);
 
-        return redirect('/vaccinations')->with('success', 'Vaccination record saved.');
+        Vaccination::create($validated);
+        return redirect()->back()->with('success', 'Vaccination record saved.');
     }
 
     private function stats(Collection $records): array

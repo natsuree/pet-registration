@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@php $canManage = auth()->user()?->canManageRecords() ?? false; @endphp
 @section('content')
     {{-- Controller contract: $pets is an iterable collection (or null); --}}
     {{-- $qrCodesGenerated and $publicProfiles are optional int/null metrics. --}}
@@ -16,9 +16,11 @@
             <h1 class="page-title mb-1">QR Codes</h1>
             <p class="text-muted mb-0">Registered pets will be available for QR code generation.</p>
         </div>
-        <a href="{{ route('pets.create') }}" class="btn btn-brand btn-sm">
+        @if ($canManage)
+        <a href="{{ route('staff.pets.create') }}" class="btn btn-brand btn-sm">
             <i class="bi bi-plus-lg me-1"></i>Register a pet
         </a>
+        @endif
     </div>
 
     <div class="row g-3 mb-4">
